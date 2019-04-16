@@ -1,0 +1,77 @@
+/* CSS Document */
+body {
+	margin: 0 0 0 0;
+	font-family:Verdana, Arial, Helvetica, sans-serif;
+	font-size:10px;
+	color:#333333;
+}
+
+
+
+#maincontainer {
+	width:588px;
+	background-color:#F4F3F0;
+}
+
+#contentcontainer {
+	width:560px; 
+	background-image:url(../images/center_main_contentBg.jpg); 
+	height:100%;	
+}
+
+#content {
+	padding:15px 8px 0px 15px;
+}
+
+#separator {
+	border-bottom:1px #CCCCCC solid;
+}
+
+.head_1 {
+	font-family:Trebuchet MS;
+	font-size:25px;
+	font-weight:bold;
+	color:#606060;
+}
+
+.head_2 {
+	font-family:Trebuchet MS;
+	font-size:15px;
+	font-weight:bold;
+	color:#606060;
+}
+
+table .base {
+	border-bottom:2px #322B23 solid;
+}
+
+table .base_c {
+	border-bottom:1px #CCCCCC solid;
+}
+
+table select {
+	font-size:11px;
+	width:100%;
+}
+
+table .input {
+	width:98%;
+	font-family:Trebuchet MS;
+	font-size:15px;
+	font-weight:bold;
+	height:20px;
+
+}
+
+table .table_name {
+	font-size:12px;
+	font-family:Trebuchet MS;
+	font-weight:bold;
+}
+
+#action {
+	font-size:11 px;
+	padding:5px;
+	border:1px #CCCCCC solid;
+	background:#f4f5f6;
+}

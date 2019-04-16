@@ -1,0 +1,330 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Class Generator v1.0</title>
+<style type="text/css">
+<!--
+body {
+	font-family: "Trebuchet MS";
+	font-size: 12px;
+}
+
+h1 {
+	color:#15448A;
+	border-bottom:1px #CCCCCC solid;
+}
+h2 {
+	color:#006600;
+	background:#f4f5f6;
+}
+h3 {
+	color:#003366;
+	padding-left:20px;
+	background-color:#f4f5f6;
+}
+h4 {
+	border-bottom:1px #CCCCCC solid;
+	color:#666666;
+}
+
+.dir_lv1 {
+	padding-left:20px;
+}
+
+.dir_lv1 strong{
+	border-bottom:1px #CCCCCC dashed;
+	color:#003366;
+}
+.dir_lv2 {
+	padding-left:35px;
+}
+
+.dir_lv2 strong{
+	border-bottom:1px #CCCCCC dashed;
+	color:#006633;
+}
+.code {
+	background-color:#F4F4F4;
+	padding-left:15px;
+}
+.code pre {
+	color:#333333;
+}
+
+.code pre strong{
+	border:1px #666666 solid;
+	background-color:#FFFFFF;
+}
+.list_head {
+	font-size:15px;
+	font-weight:bold;
+	color:#003366;
+	border-bottom:1px #CCCCCC solid;
+}
+li {
+	padding-left:20px;
+	border-bottom:1px #F0F0F0 solid;
+	list-style:square;
+}
+-->
+</style>
+</head>
+
+<body>
+<h1>Class Generator v1.0 Documentation</h1>
+<strong>Class Generator</strong> is a simple Code Generator in building Database Scalfolding for building application.  
+It generates accessor methods (GET and SET) for all the database fields defined in the class, CRUD (Create, Retrieve, Update, Delete) methods for performing
+basic database operation, and List method.<br />
+<br />
+These essential methods are all needed in building application without actually coding everything from scratch.  The code generated can be modified anytime to fully
+customize the whole application.<br />
+<br />
+The Class Generator is bundled with a simple UI that would help or guide you in generating your own class.
+
+<h2>Setting Up</h2>
+Class Generator Class Package: Directory Structure<br />
+<br />
+/<strong>ClassGenerator</strong> (the directory of the Class Generator) <br />
+<div class="dir_lv1"><strong>/core_classes</strong> (Classes needed to perform class generation and other essential functions)</div>
+<div class="dir_lv2"><strong>DBGEN_Generator.php</strong> (Generator Class)</div>
+<div class="dir_lv2"><strong>core.dbfunctions.php</strong> (MySQL Database Wrapper)</div>
+<div class="dir_lv1"><strong>/images</strong> (Images for the Generator UI)</div>
+<div class="dir_lv1"><strong>/objects</strong> (Default temporary Storage for the Generated Class, This directory can be customized)</div>
+<div class="dir_lv1"><strong>/style</strong> (CSS for Generator UI)</div>
+<div class="dir_lv1"><strong>configuration.php</strong> (Database Configuration script)</div>
+<div class="dir_lv1"><strong>index.setup.php</strong> (Generator UI)</div>
+<h3>configuration.php</h3>
+<p>This is the default configuration script that the system use in determining the classes needed to be generated. There are simple steps in setting up the Generator </p>
+<div class="code">
+<pre>
+&lt;?php
+// include files
+include 'core_classes/core.dbfunctions.php';
+include 'core_classes/DGEN_Generator.php';
+
+// Database Configuration
+$dbConn = new DbConnection();
+$dbConn->useManualDefinition("hostname", "databasename", "username", "password");
+$dbConn->doConnection();	
+?&gt;
+</pre>
+</div>
+
+To set up the database connection, you have to modify the <strong>configuration.php</strong> and change it to your own database connection parameters.  After modifying the
+configuration, Run the <strong>index.setup.php</strong><br />
+<h3>index.setup.php</h3>
+<p>The <strong>index.setup.php </strong>generally provides you with all the essential UI in generating the class.  If you have setup the database configuration properly it should display all the needed database tables and its corresponding fields. All you have to do is to follow all the instructions provided in the <strong>index.setup.php</strong></p>
+
+<h2>The Generated Class</h2>
+<p>All the generated class follows simple format in all of its method.</p>
+<div class="list_head">Accessor Methods:</div>
+<ul>
+	<li>GET methods: <strong>get_</strong>fieldname()</li>
+	<li>SET methods: <strong>set_</strong>fieldname(param)</li>
+</ul>
+
+<div class="list_head">CRUD METHODS</div>
+<ul>
+  <li><strong>createnew_</strong>tablename(param)</li>
+  <li><strong>get_</strong>tablename(param)</li>
+  <li><strong>update_</strong>tablename(param)</li>
+  <li><strong>delete_</strong>tablename(param)</li>
+  <li><strong>list_</strong>tablename(param)</li>
+</ul>
+
+<h4>Example</h4>
+If you have this table (ITEM) with database fields id, itemname, description<br />
+ITEM: {<u>id</u>, itemname, description} <br />
+<br />
+<table width="50%" border="0" cellspacing="2" cellpadding="3" style="border:2px #666666 solid;">
+  <tr>
+    <td width="52%" height="24" bgcolor="#f4f5f6"><strong>Field Name </strong></td>
+    <td width="29%" bgcolor="#f4f5f6"><strong>Type</strong></td>
+    <td width="19%" bgcolor="#f4f5f6">&nbsp;</td>
+  </tr>
+  <tr>
+    <td><strong>id (PRIMARY) </strong></td>
+    <td><strong>INT</strong></td>
+    <td><strong>autonumber</strong></td>
+  </tr>
+  <tr>
+    <td>itemname</td>
+    <td>VARCHAR(150)</td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td>itemdescription</td>
+    <td>TEXT</td>
+    <td>&nbsp;</td>
+  </tr>
+</table>
+<br />
+Generator UI setup:<br />
+<ul>
+  <li>Database Table: <strong>Item</strong> checkbox is selected</li>
+  <li>Key field: <strong>id</strong></li>
+</ul>
+<h4>Generated Class: Item</h4>
+<div class="code">
+<pre>
+&lt;?php
+class <strong>Item</strong> {
+    var id;
+    var itemname;
+    var itemdescription;
+	
+	// ACCESSOR METHODS: GET
+    function <strong>get_id</strong>() { ... }
+    function <strong>get_itemname</strong>() { ... }
+    function <strong>get_itemdescription</strong>() { ... }
+
+    // ACCESSOR METHOD: SET
+    function <strong>set_id</strong>($id) { ... }
+    function <strong>set_itemname</strong>($itemname) { ... }
+    function <strong>set_itemdescription</strong>($itemdescription) { ... }
+	
+    // CRUD METHOD
+    function <strong>createnew_item</strong>($_id, $itemname, $itemdescription) { ... }
+    function <strong>get_item</strong>($_id) { ... }
+    function <strong>update_item</strong>($_id, $itemstobeupdated = array()) { ... }
+    function <strong>delete_item</strong>($_id) { ... }
+    function <strong>list_item</strong>($conditions) { ... }
+}	
+?&gt;
+</pre>
+</div>
+
+This is the output of the generated class.  The class provides a simple access interface between you application and the database itself, so you dont have to write
+SQL queries just to get repeated information, saving you amount of time.<br />
+<br />
+<h2>Using the Class: Item</h2>
+The class uses the database object as a MySQL wrapper <strong>(core.dbfunctions.php)</strong> defined in the globals as <strong>$GLOBALS['dbConn']</strong><br />
+Setting up the Database wrapper object is simple all you have to do it to define it as a global variable
+<div class="code">
+<pre>
+&lt;?php
+    $dbConn = new DbConnection(); 
+    $dbConn->useManualDefinition(*my connection parameters*);
+    $dbConn->doConnection();
+	
+    // Declare the dbConn object to the globals
+    <strong>$GLOBALS['dbConn'] = $dbConn;</strong>
+?&gt;
+</pre>
+</div>
+
+Normally what i do it to put it inside a configuration file or script the include it to all my pages.  I reuse the connection class to all my projects using the
+included configuration file.  Once you have set this up, you can already use the class to perform its operation.
+
+<h3>Creating New Entry: Item</h3>
+<div class="code">
+<pre>
+&lt;?php
+    // include the file of the generated class
+    include_once 'path/to/generated/objects/item.class.php';
+    
+    // create a new instance
+    <strong>$item = new Item();</strong>
+
+    // creating a new record
+    <strong>$item->createnew_item(0,'Rolex Wrist Watch', 'Rolex Wrist Watch detailed Description');</strong>
+?&gt;
+</pre>
+</div>
+All you have to do is to fill all the parameters provided by the method in inserting, in this case, the method requires, the item id (auto number), the item name, and the description.<br />
+<strong>Note: </strong> If you are using an autonumber fields, use 0 (zero) as a value for those fields.<br />
+Make sure you validate all your input before inserting into the database.
+
+<h3>Updating Existing Entry: Item</h3>
+<div class="code">
+<pre>
+&lt;?php
+    // include the file of the generated class
+    include_once 'path/to/generated/objects/item.class.php';
+    
+    // item id to be updated
+    <strong>$itemIdToBeUpdated = 1;</strong>
+	
+    // create a new instance
+    <strong>$item = new Item();</strong>
+
+    // fields to be updated
+    // fields are added into an associative array with its corresponding new value
+    $pprop = array(<strong>"itemname" => "Rolex Diamond Wrist Watch"</strong>,
+                   <strong>"itemdescription" => "Diamond watch rolex... updated description."</strong>);
+    
+	// updating the record
+    <strong>$item->update_item($itemIdToBeUpdated, $pprop);</strong>
+?&gt;
+</pre>
+</div>
+
+<h3>Deleting an Existing Entry: Item</h3>
+<div class="code">
+<pre>
+&lt;?php
+    // include the file of the generated class
+    include_once 'path/to/generated/objects/item.class.php';
+    
+    // item id to be updated
+    <strong>$itemIdToBeDeleted = 1;</strong>
+	
+    // create a new instance
+    <strong>$item = new Item();</strong>
+  
+	// delete the record
+    <strong>$item->delete_item($itemIdToBeDeleted);</strong>
+?&gt;
+</pre>
+</div>
+
+<h3>Retriving an Existing Entry: Item</h3>
+<div class="code">
+<pre>
+&lt;?php
+    // include the file of the generated class
+    include_once 'path/to/generated/objects/item.class.php';
+    
+    // item id to be updated
+    <strong>$itemIdToBeRetrived = 1;</strong>
+	
+    // create a new instance
+    <strong>$item = new Item();</strong>
+  
+	// item to be retrived
+    <strong>$itemNoOne = $item->get_item($itemIdToBeRetrived);</strong>
+	
+    // after passing it to a value you can get all the values of the object by using the accessor methods<br />
+    $itemNoOne->get_id();
+    $itemNoOne->get_itemname();
+    $itemNoOne->get_itemdescription();
+?&gt;
+</pre>
+</div>
+
+<h3>Listing an Existing Entry: Item</h3>
+<div class="code">
+<pre>
+&lt;?php
+    // include the file of the generated class
+    include_once 'path/to/generated/objects/item.class.php';
+    
+    // create a new instance
+    <strong>$item = new Item();</strong>
+  
+    // items to be retrived with its matching SQL condition
+    // NO WHERE needed, groupings and other conditions can be added in this part
+    <strong>$items = $item->list_item("itemname LIKE '%Rolex%'");</strong>
+
+    <strong>foreach($items as item)</strong> {	
+        // after passing it to a value you can get all the values of the object by using the accessor methods<br />
+        $item->get_id();
+        $item->get_itemname();
+        $item->get_itemdescription();
+    }
+?&gt;
+</pre>
+</div>
+</body>
+</html>
