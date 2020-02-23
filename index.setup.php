@@ -87,7 +87,7 @@ foreach ($__dbListings as $_index => $_dbName) {
                                         <table width="100%" border="0" cellspacing="0" cellpadding="0">
                                             <tr>
                                                 <td width="21%" height="35">Path </td>
-                                                <td width="79%" height="35"><input name="_genField" type="text" class="input" id="_genField" value="objects/<?php echo($dbName); ?>/" /></td>
+                                                <td width="79%" height="35"><input name="_genField" type="text" class="input" id="_genField" value="/tmp/" /></td>
                                             </tr>
                                         </table>
 

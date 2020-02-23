@@ -62,6 +62,9 @@ class DGEN_Generator {
 	 * 
 	 * */
 	var $__methodListings;
+
+	var $namespace; 
+	
 	
 	
 	/**
@@ -83,11 +86,13 @@ class DGEN_Generator {
 		// If the generatedClassPath is not set
 		// use a default class path location
 		if(empty($generatedClassPath)) {
-			$generatedClassPath = "objects/";		
+			$generatedClassPath = "tmp/";		
 		}
 		
 		// Sets the location of the generated Class Path
 		$this->__generatedClassPath = $generatedClassPath;
+
+		$this->namespace = 'App\Models';
 		
 	}
 	
@@ -131,12 +136,13 @@ class DGEN_Generator {
 	 * @return void
 	 * */
 	function generateAccessor($fieldName) {
-		
+		$fieldNameTmp = $fieldName;
+		$fieldName = str_replace(' ','',(ucwords(str_replace("_", " ", ucfirst(strtolower($fieldName))))));
 		// generate a GET method
 		$accessorMethod = $this->generateDocumentation("Get value for field: $fieldName", array(), array("$fieldName"));
-		$accessorMethod .= $this->generateMethods("get_$fieldName");
+		$accessorMethod .= $this->generateMethods("get$fieldName");
 		$accessorMethod .= "        // returns the value of $fieldName\n";
-		$accessorMethod .= "        return \$this->$fieldName;\n";
+		$accessorMethod .= "        return \$this->$fieldNameTmp;\n";
 		$accessorMethod .= "    }\n";
 		
 		// add method to get Method stack
@@ -146,9 +152,9 @@ class DGEN_Generator {
 		$parameters = array($fieldName);
 		
 		$accessorMethod = $this->generateDocumentation("Set value for field: $fieldName", $parameters, array("void"));
-		$accessorMethod .= $this->generateMethods("set_$fieldName", $parameters);
+		$accessorMethod .= $this->generateMethods("set$fieldName", $parameters);
 		$accessorMethod .= "        // sets the value of $fieldName\n";
-		$accessorMethod .= "        \$this->$fieldName = $$fieldName;\n";
+		$accessorMethod .= "        \$this->$fieldNameTmp = $$fieldName;\n";
 		$accessorMethod .= "    }";
 		
 		// add method to the set Method stack
@@ -164,7 +170,7 @@ class DGEN_Generator {
 	function generateFields($fieldName) {
 		
 		$__field = $this->generateDocumentation("DB Fields: $fieldName");
-		$__field .= "    var $$fieldName;";
+		$__field .= "    private $$fieldName;";
 		
 		// add the field to the fieldListings
 		array_push($this->__fieldListings, $__field);
@@ -179,51 +185,33 @@ class DGEN_Generator {
 	 * @param tableName
 	 * */
 	function generateCreateNew($tableName) {
+		$tableNameTmp = $tableName;
+		$tableName = str_replace(' ','',(ucwords(str_replace("_", " ", ucfirst(strtolower($tableName))))));
 		$tableList = $this->__dbConn->getTable();
 		
 		// parameters for creating new item
-		$parameters = $tableList[$tableName];
+		$parameters = array("itemsToBeInsert = array()");
 		$createNewStub = $this->generateDocumentation("Create a new Record: $tableName", $parameters, array("void"));
 		
 		// generate a new method stub
-		$createNewStub .= $this->generateMethods("createnew_$tableName", $parameters);
-		
-		// counter
-		// used for presentation
-		$ctr = 0;
-		
-		// construct an array string to be inserted into the
-		// database
-		$_insertItems = "array(";
-		
-		// loop through all the parameters		
-		foreach($parameters as $param) {
-			// create spaces and indention
-			// if counter value is set to 0
-			if($ctr == 0) {
-				// no indention
-				$_insertItems .= "";
-			} else {
-				// create indention
-				$_insertItems .= "                      ";
-			}
-			
-			$_insertItems .= "$$param,\n";
-			$ctr++;
-		}
-		
-		$_insertItems = substr($_insertItems, 0, strlen($_insertItems) -2);
-		$_insertItems .= "); \n";
-		
-		
-		// perform a collation for parameters to be inserted in the database
-		$createNewStub .= "\n        // items to be inserted in the database \n" .
-				          "        \$_obj = $_insertItems\n" .
-				          "        // database object connection\n" .
-				          "        \$dbConn = \$GLOBALS['dbConn'];\n\n" .
-				          "        // perform insert in the database\n" .
-				          "        \$dbConn->insert(\"$tableName\", \$_obj);\n";
-		$createNewStub .= "    }";
+		$createNewStub .= $this->generateMethods("create$tableName", $parameters);
+		$createNewStub .= "         \$values = array();\n" .
+						  "         // performs update in the database\n" .
+						  "         \$sqlStatementAux = '';\n" . 
+						  "         \$sqlStatement = \"INSERT INTO $tableNameTmp (\";\n" .
+						  "         foreach(\$itemsToBeInsert as \$_fName => \$_fVal) { \n " .
+						  "				\$com = (count(\$values) > 0) ? ',' : '';\n" .
+						  "				\$sqlStatement .= \"\$com \$_fName\";\n" .
+						  "				\$sqlStatementAux .= \"\$com ? \";\n" .
+						  "				array_push(\$values, \$_fVal);\n" .
+						  "         }\n\n" .
+						  "         \$sqlStatement .= \") VALUES (\$sqlStatementAux)\";\n" .
+						  "         \$__resObj = \$this->db->prepare(\$sqlStatement);\n\n" .
+						  "         if (!\$__resObj->execute(\$values)) {\n" . 
+						  "				return array('error' => \$__resObj->errorInfo());\n" .
+						  "         }\n\n".
+						  "         return array('id' => \$__resObj->lastInsertId());\n" .
+				          "    }";
 		
 		array_push($this->__methodListings, $createNewStub);
 	}
@@ -245,7 +233,7 @@ class DGEN_Generator {
 		$parameters = array($fieldID);
 		$createNewStub = $this->generateDocumentation("Retrived an existing record: $tableName", $parameters, array("new ".ucwords($tableName)));
 		// create new method stub
-		$createNewStub .= $this->generateMethods("get_$tableName", $parameters);
+		$createNewStub .= $this->generateMethods("Get" . ucfirst(strtolower($tableName)), $parameters);
 		$createNewStub .= "\n        // retrive the data\n";
 		$createNewStub .= "        \$dbConn = \$GLOBALS['dbConn'];\n\n" .
 				          "        // retrieved value in the database\n" .
@@ -272,20 +260,34 @@ class DGEN_Generator {
 	 * @param string fieldID
 	 * */
 	function generateUpdate($tableName, $fieldID) {
+		$tableNameTmp = $tableName;
+		$tableName = str_replace(' ','',(ucwords(str_replace("_", " ", ucfirst(strtolower($tableName))))));
 		// parameters
-		
-		$parameters = array($fieldID, "itemsToBeUpdated = array()");
+		$parameters = array($fieldID, "itemsToBeUpdated = array()", "conditionalStatement = array()");
 		$createNewStub = $this->generateDocumentation("Update an existing record: $tableName", $parameters, array("void"));
 		// create new method stub
-		$createNewStub .= $this->generateMethods("update_$tableName", $parameters);
-		$createNewStub .= "\n         // get database connection\n" .
-				          "         \$dbConn = \$GLOBALS['dbConn'];\n\n" .
-				          "         // performs update in the database\n" .
-				          "         foreach(\$itemsToBeUpdated as \$_fName => \$_fVal) { \n " .
-				          "              \$dbConn->addValuePair(\$_fName, \$_fVal);\n" .
-				          "         }\n\n" .
-				          "         // perform update operation\n" .
-				          "         \$dbConn->update(\"$tableName\", \"$fieldID = '$$fieldID'\");\n" .
+		$createNewStub .= $this->generateMethods("update" . $tableName, $parameters);
+		$createNewStub .= "         \$values = array();\n" .
+						  "         // performs update in the database\n" .
+						  "         \$sqlStatement = \"UPDATE $tableNameTmp SET \";\n" .
+						  "         foreach(\$itemsToBeUpdated as \$_fName => \$_fVal) { \n " .
+						  "            \$com = (count(\$values) > 0) ? ',' : '';\n" .
+						  "            \$sqlStatement .= \"\$com \$_fName = ? \";\n" .
+						  "            array_push(\$values, \$_fVal);\n" .
+						  "         }\n\n" .
+						  "         \$sqlStatement .= \"WHERE $fieldID = '$$fieldID'\";\n" .
+						  "         if(!empty(\$conditionalStatement) && count(\$conditionalStatement) > 0) { \n" . 
+					  	  "             // performs update in the database\n" .
+						  "             foreach(\$conditionalStatement as \$_fName => \$_fVal) { \n" .
+						  "                 \$sqlStatement .= \" AND \$_fName = ?\";\n" .
+						  "                 array_push(\$values, \$_fVal);\n" .
+						  "         	}\n\n" .
+						  "         }\n" .
+						  "         \$__resObj = \$this->db->prepare(\$sqlStatement);\n\n" .
+						  "			if (!\$__resObj->execute(\$values)) {\n" . 
+						  "				return array('error' => \$__resObj->errorInfo());\n" .
+						  "		    }\n\n".
+						  "			return true;\n" .
 				          "    }";
 		array_push($this->__methodListings, $createNewStub);
 	}
@@ -297,49 +299,82 @@ class DGEN_Generator {
 	 * 
 	 * */
 	function generateDelete($tableName, $fieldID) {
+		$tableNameTmp = $tableName;
+		$tableName = str_replace(' ','',(ucwords(str_replace("_", " ", ucfirst(strtolower($tableName))))));
 		// parameters
-		$parameters = array($fieldID);
+		$parameters = array($fieldID, "conditionalStatement = array()");
 		$createNewStub = $this->generateDocumentation("Delete an existing record: $tableName", $parameters, array("void"));
 		// create a new method stub
-		$createNewStub .= $this->generateMethods("delete_$tableName", $parameters);
-		$createNewStub .= "\n         // get database connection\n" .
-				          "         \$dbConn = \$GLOBALS['dbConn'];\n\n" .
-				          "         // performs deletion of data\n" .
-				          "         \$dbConn->delete(\"$tableName\", \"$fieldID = '$$fieldID'\");\n" .
+		$createNewStub .= $this->generateMethods("delete". $tableName, $parameters);
+		$createNewStub .= "         // performs deletion of data\n" .
+						  "         \$sqlStatement = \"DELETE FROM $tableNameTmp WHERE $fieldID = '$$fieldID'\";\n" .
+						  "         \$values = array();\n" .
+						  "         if(!empty(\$conditionalStatement) && count(\$conditionalStatement) > 0) { \n" . 
+					  	  "             // performs delete in the database\n" .
+						  "             foreach(\$conditionalStatement as \$_fName => \$_fVal) { \n " .
+						  "             	\$sqlStatement .= \" AND \$_fName = ?\";\n" .
+						  "					array_push(\$values, \$_fVal);" .
+						  "         	}\n\n" .
+						  "         }\n" .
+						  "         \$__resObj = \$this->db->prepare(\$sqlStatement);\n\n" .
+						  "			\$__resObj->execute(\$values);\n" .
 				          "    }";
 		array_push($this->__methodListings, $createNewStub);		          
 	}
 	
 	function generateList($tableName) {
-		
+		$tableNameTmp = $tableName;
+		$tableName = str_replace(' ','',(ucwords(str_replace("_", " ", ucfirst(strtolower($tableName))))));
 		// parameters
-		$parameters = array("conditionalStatement = ''");
+		$parameters = array("findFields = array()", "conditionalStatement = array()","limit = 0"," search = false");
 		$createNewStub = $this->generateDocumentation("Retrived list of objects base on a given parameters: $tableName", $parameters, array("collection of objects: ". ucwords($tableName)));
 		// create a new method stub
-		$createNewStub .= $this->generateMethods("list_$tableName", $parameters);
-		$createNewStub .= "\n         \$dbConn = \$GLOBALS['dbConn'];" .
-						  "\n         // check if there is a given parameter list\n";
-		$createNewStub .= "         if(!empty(\$conditionalStatement)) { \n" .
-				          "              \$sqlStatement = \"SELECT * FROM $tableName WHERE \$conditionalStatement\"; \n" .
-				          "         } else { \n" .
-				          "              \$sqlStatement = \"SELECT * FROM $tableName\";\n" .
-				          "         }\n\n" .
+		$createNewStub .= $this->generateMethods("list". $tableName, $parameters);
+		$createNewStub .= "\n         // check if there is a given parameter list\n";
+		$createNewStub .= "         \$sqlStatement = \"SELECT \";\n" .
+						  "         if(!empty(\$findFields) && count(\$findFields) > 0) { \n" .
+						  "             // performs select in the database\n" .
+						  "             \$sqlStatement .= implode(',', \$findFields);\n" .
+						  "         } else { \n" .
+						  "             \$sqlStatement .= \" * \"; \n" .
+						  "         }\n\n" .
+						  "         \$sqlStatement .= \" FROM $tableNameTmp \";\n" .
+						  "         \$values = array();\n" .
+						  "         if(!empty(\$conditionalStatement) && count(\$conditionalStatement) > 0) { \n" . 
+						  "				\$sqlStatement .= \" WHERE \";\n	\$_add = 0;							".	
+						  "             // performs select in the database\n" .
+						  "             foreach(\$conditionalStatement as \$_fName => \$_fVal) { \n " .
+						  "					\$_conditionalSearch = (\$_add != 0) ? 'OR' : ''; \n".
+						  "					\$_conditional = (\$_add != 0) ? 'AND' : ''; \n".
+						  "					\$sqlStatement .= (\$search) ? " \$_conditionalSearch \$_fName LIKE '%\$_fVal%' \" : \" \$_conditional \$_fName = ? \"; \n".
+						  "					\$_add++;	\n".	
+						  "					array_push(\$values, \$_fVal);" .
+				          "         	}\n\n" .
+						  "         }\n" .
+						  "         if(\$limit > 0) { \n" .
+						  "				\$sqlStatement .= \" LIMIT \$limit \";\n" .
+						  "         }\n" .
 				          "         // retrieve the values base on the query result\n" .
-				          "         \$__resObj = \$dbConn->doQuery(\$sqlStatement);\n\n" .
-				          "         \$__collectionOfObjects = array();\n" .
-				          "         foreach(\$__resObj as \$__rs) { \n" .
-				          "            \$__newObj = new ".ucwords($tableName)."();\n\n";
+						  "         \$__resObj = \$this->db->prepare(\$sqlStatement);\n\n" .
+						  "			\$__resObj->execute(\$values);\n" .
+						  "			\$amount = \$__resObj->rowCount();\n" .
+						  "         \$__collectionOfObjects = array();\n" .
+						  "         if(\$amount > 0) { \n" .
+						  "         	while(\$__rs = \$__resObj->fetch(\PDO::FETCH_ASSOC)) { \n" .
+						  "            		\$__newObj = new ".ucwords($tableName)."Model(false);\n\n";
 				          
 		// retrived the table inforamtion
 		$table = $this->__dbConn->getTable();
 		 
 		// get all the fields
-		foreach($table[$tableName] as $__f) {
-			$createNewStub .= "            \$__newObj->set_$__f(\$__rs['$__f']);\n";
+		foreach($table[$tableNameTmp] as $__f) {
+			$__fParam = str_replace(' ','',(ucwords(str_replace("_", " ", ucfirst(strtolower($__f))))));
+			$createNewStub .= "					\$__newObj->set$__fParam((isset(\$__rs['$__f']) ? \$__rs['$__f'] : ''));\n";
 		}				     
-		$createNewStub .= "\n            // add object to collection \n" .
-				          "            array_push(\$__collectionOfObjects, \$__newObj);\n" .
-				          "         }\n\n" .
+		$createNewStub .= "\n            	// add object to collection \n" .
+				          "            		array_push(\$__collectionOfObjects, \$__newObj);\n" .
+						  "         	}\n\n" .
+						  "         }\n\n" .
 				          "         // return collection of objects\n" .
 				          "         return \$__collectionOfObjects;\n".
 				          "    }" ;
@@ -360,7 +395,8 @@ class DGEN_Generator {
 		// Resolve the error reported by: Pierre ABOUCAYA
 		// regarding the old code. $docsStub =  "    /***\n".
 		// ive change it to this new line.  
-		$docsStub =  "    /***\n";
+		$docsStub =  "    /**\n";
+		$docsStub .= "     *\n";
 		$docsStub .= "     * $docs\n";
 		$docsStub .= "     *\n" .
 				     "     *\n" .
@@ -387,10 +423,21 @@ class DGEN_Generator {
 		
 		// get the table fields
 		$fields = $tableInfo[$tableName];
-		
+		$verificar = 'verify';
+		$objThis = 'this->db';
+		$db = 'db';
 		$__gC = "";
-		$__gC .= "class ".ucwords($tableName)." extends Database { \n\n";
-		
+		$__gC .= "\n\n namespace " . $this->namespace . "; 
+					\n use App\Classes\Database;
+					\n\nclass ".str_replace(' ','',(ucwords(str_replace("_", " ", ucfirst(strtolower($tableName))))))
+					."Model extends Database { \n\n";
+		$__gC .= "private $$db;
+
+				public function __construct($$verificar = true) {
+					if ($$verificar) {
+						$$objThis = Database::getInstance();
+					}
+				}\n\n";
 		// perform fields and accessor generation
 		foreach($fields as $__f) {
 			$this->generateFields($__f);
@@ -416,7 +463,7 @@ class DGEN_Generator {
  			
 		// generate the CRUD
 		$this->generateCreateNew($tableName);
-		$this->generateRetrive($tableName, $fieldID);
+		//$this->generateRetrive($tableName, $fieldID);
 		$this->generateUpdate($tableName, $fieldID);
 		$this->generateDelete($tableName, $fieldID);
 		
@@ -434,7 +481,8 @@ class DGEN_Generator {
 		$__gC = "<?php ".$__gC." ?>";
 		
 		// write the file into the designated location
-		$this->_writeFile($__gC, $this->__generatedClassPath.strtolower($tableName).".class.php");
+		$tableName = str_replace(' ','',(ucwords(str_replace("_", " ", ucfirst(strtolower($tableName))))));
+		$this->_writeFile($__gC, $this->__generatedClassPath.$tableName."Model.php");
 		
 		// reset everything
 		$this->__fieldListings = array();

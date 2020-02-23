@@ -7,12 +7,12 @@ include 'core_classes/DGEN_Generator.php';
 if($_POST['db_name']){
     $dbName = $_POST['db_name'];
 }else{
-    $dbName = 'ggt_tareas_thursday';
+    $dbName = 'gestion';
 }
 
 // Database Configuration
 $dbConn = new DbConnection();
-$dbConn->useManualDefinition("192.168.10.10", $dbName, "root", "Ahmed.Necdet");
+$dbConn->useManualDefinition("localhost", $dbName, "root", "root");
 $dbConn->doConnection();
 
 
